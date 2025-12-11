@@ -111,12 +111,14 @@
     </main>
   </div>
 
-  <!-- Mobile Bottom Navigation (iOS Style) -->
+  <!-- Mobile Bottom Navigation (iOS Style - Edge to Edge) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 lg:hidden"
-    style="padding-bottom: env(safe-area-inset-bottom, 0px);"
+    class="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
+    style="padding-bottom: env(safe-area-inset-bottom, 0px); background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,1) calc(100% - env(safe-area-inset-bottom, 0px)), rgba(248,248,248,1) 100%);"
   >
-    <div class="flex items-center justify-around h-20">
+    <div
+      class="flex items-center justify-around h-16 bg-white/95 backdrop-blur-lg border-t border-gray-200/80"
+    >
       {#each navLinks as link, i}
         {@const active = isActive(link.href, $page.url.pathname)}
         <a
