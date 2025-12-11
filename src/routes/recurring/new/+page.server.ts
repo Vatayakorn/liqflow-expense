@@ -7,12 +7,39 @@ export const actions: Actions = {
         const formData = await request.formData();
         const description = formData.get('description') as string;
         const amount = parseFloat(formData.get('amount') as string);
-        const category_id = formData.get('category_id') as string;
-        const department_id = formData.get('department_id') as string;
-        const payment_method_id = formData.get('payment_method_id') as string;
+        let category_id = formData.get('category_id') as string;
+        let department_id = formData.get('department_id') as string;
+        let payment_method_id = formData.get('payment_method_id') as string;
         const vendor = formData.get('vendor') as string;
         const frequency = formData.get('frequency') as string;
         const start_date = formData.get('start_date') as string;
+
+        // Handle Custom Category
+        if (category_id === 'custom') {
+            const customName = formData.get('custom_category') as string;
+            if (customName) {
+                const { data, error } = await supabase.from('categories').insert({ name: customName }).select().single();
+                if (!error && data) category_id = data.id;
+            }
+        }
+
+        // Handle Custom Department
+        if (department_id === 'custom') {
+            const customName = formData.get('custom_department') as string;
+            if (customName) {
+                const { data, error } = await supabase.from('departments').insert({ name: customName }).select().single();
+                if (!error && data) department_id = data.id;
+            }
+        }
+
+        // Handle Custom Payment Method
+        if (payment_method_id === 'custom') {
+            const customName = formData.get('custom_payment_method') as string;
+            if (customName) {
+                const { data, error } = await supabase.from('payment_methods').insert({ name: customName }).select().single();
+                if (!error && data) payment_method_id = data.id;
+            }
+        }
         
         // Calculate next_due_date (initially same as start_date)
         const next_due_date = start_date;

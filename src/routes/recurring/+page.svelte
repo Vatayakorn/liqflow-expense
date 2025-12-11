@@ -80,7 +80,12 @@
                         </div>
                     </div>
                     
-                    <!-- Future: Add buttons to edit or generate expense manually -->
+                    <a
+                        href="/recurring/{expense.id}/edit"
+                        class="btn-secondary w-full text-sm py-2"
+                    >
+                        แก้ไข / ลบ
+                    </a>
                 </div>
             {/each}
         </div>

@@ -11,7 +11,25 @@
     const departments = $page.data.departments ?? [];
     const paymentMethods = $page.data.paymentMethods ?? [];
 
-    let isSubmitting = $state(false);
+    // State สำหรับ "อื่นๆ" custom input
+    let showCustomCategory = $state(false);
+    let showCustomDepartment = $state(false);
+    let showCustomPaymentMethod = $state(false);
+
+    function handleCategoryChange(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        showCustomCategory = select.value === 'custom';
+    }
+
+    function handleDepartmentChange(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        showCustomDepartment = select.value === 'custom';
+    }
+
+    function handlePaymentMethodChange(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        showCustomPaymentMethod = select.value === 'custom';
+    }
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-8">
@@ -110,18 +128,39 @@
                     <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">
                         หมวดหมู่ <span class="text-red-500">*</span>
                     </label>
-                    <select
-                        id="category_id"
-                        name="category_id"
-                        required
-                        class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        value={form?.values?.category_id ?? ''}
-                    >
-                        <option value="">-- เลือกหมวดหมู่ --</option>
-                        {#each categories as cat}
-                            <option value={cat.id}>{cat.icon} {cat.name}</option>
-                        {/each}
-                    </select>
+                    {#if !showCustomCategory}
+                        <select
+                            id="category_id"
+                            name="category_id"
+                            required
+                            class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                            value={form?.values?.category_id ?? ''}
+                            onchange={handleCategoryChange}
+                        >
+                            <option value="">-- เลือกหมวดหมู่ --</option>
+                            {#each categories as cat}
+                                <option value={cat.id}>{cat.icon} {cat.name}</option>
+                            {/each}
+                            <option value="custom">+ เพิ่มหมวดหมู่ใหม่</option>
+                        </select>
+                    {:else}
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                name="custom_category"
+                                required
+                                class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                                placeholder="ระบุชื่อหมวดหมู่ใหม่"
+                            />
+                            <button
+                                type="button"
+                                class="btn-secondary px-3"
+                                onclick={() => showCustomCategory = false}
+                            >
+                                ยกเลิก
+                            </button>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Department -->
@@ -129,18 +168,39 @@
                     <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">
                         แผนก <span class="text-red-500">*</span>
                     </label>
-                    <select
-                        id="department_id"
-                        name="department_id"
-                        required
-                        class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        value={form?.values?.department_id ?? ''}
-                    >
-                        <option value="">-- เลือกแผนก --</option>
-                        {#each departments as dept}
-                            <option value={dept.id}>{dept.name}</option>
-                        {/each}
-                    </select>
+                    {#if !showCustomDepartment}
+                        <select
+                            id="department_id"
+                            name="department_id"
+                            required
+                            class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                            value={form?.values?.department_id ?? ''}
+                            onchange={handleDepartmentChange}
+                        >
+                            <option value="">-- เลือกแผนก --</option>
+                            {#each departments as dept}
+                                <option value={dept.id}>{dept.name}</option>
+                            {/each}
+                            <option value="custom">+ เพิ่มแผนกใหม่</option>
+                        </select>
+                    {:else}
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                name="custom_department"
+                                required
+                                class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                                placeholder="ระบุชื่อแผนกใหม่"
+                            />
+                            <button
+                                type="button"
+                                class="btn-secondary px-3"
+                                onclick={() => showCustomDepartment = false}
+                            >
+                                ยกเลิก
+                            </button>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Payment Method -->
@@ -148,18 +208,39 @@
                     <label for="payment_method_id" class="block text-sm font-medium text-gray-700 mb-1">
                         วิธีการชำระเงิน <span class="text-red-500">*</span>
                     </label>
-                    <select
-                        id="payment_method_id"
-                        name="payment_method_id"
-                        required
-                        class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        value={form?.values?.payment_method_id ?? ''}
-                    >
-                        <option value="">-- เลือกวิธีการชำระเงิน --</option>
-                        {#each paymentMethods as pm}
-                            <option value={pm.id}>{pm.icon} {pm.name}</option>
-                        {/each}
-                    </select>
+                    {#if !showCustomPaymentMethod}
+                        <select
+                            id="payment_method_id"
+                            name="payment_method_id"
+                            required
+                            class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                            value={form?.values?.payment_method_id ?? ''}
+                            onchange={handlePaymentMethodChange}
+                        >
+                            <option value="">-- เลือกวิธีการชำระเงิน --</option>
+                            {#each paymentMethods as pm}
+                                <option value={pm.id}>{pm.icon} {pm.name}</option>
+                            {/each}
+                            <option value="custom">+ เพิ่มวิธีการชำระเงินใหม่</option>
+                        </select>
+                    {:else}
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                name="custom_payment_method"
+                                required
+                                class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
+                                placeholder="ระบุชื่อวิธีการชำระเงินใหม่"
+                            />
+                            <button
+                                type="button"
+                                class="btn-secondary px-3"
+                                onclick={() => showCustomPaymentMethod = false}
+                            >
+                                ยกเลิก
+                            </button>
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
