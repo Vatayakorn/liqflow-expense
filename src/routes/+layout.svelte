@@ -15,12 +15,12 @@
   // สถานะเปิด/ปิด sidebar บน mobile
   let sidebarOpen = $state(false);
 
-  // ลิงก์ในเมนู
+  // ลิงก์ในเมนู (ปุ่มเพิ่มอยู่ตรงกลาง index=2)
   const navLinks = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/expenses", label: "รายจ่าย", icon: Receipt },
-    { href: "/budgets", label: "งบประมาณ", icon: PiggyBank },
     { href: "/expenses/new", label: "เพิ่ม", icon: PlusCircle },
+    { href: "/budgets", label: "งบประมาณ", icon: PiggyBank },
   ];
 
   // ตรวจสอบว่า link active หรือไม่
@@ -113,9 +113,10 @@
 
   <!-- Mobile Bottom Navigation (iOS Style) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-gray-200/50 lg:hidden safe-area-bottom"
+    class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 lg:hidden"
+    style="padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
-    <div class="flex items-center justify-around h-16">
+    <div class="flex items-center justify-around h-20">
       {#each navLinks as link, i}
         {@const active = isActive(link.href, $page.url.pathname)}
         <a
@@ -127,13 +128,13 @@
           {#if i === 2}
             <!-- Special style for Add button -->
             <div
-              class="w-12 h-12 -mt-6 bg-primary-600 rounded-full flex items-center justify-center shadow-lg shadow-primary-600/30"
+              class="w-14 h-14 -mt-7 bg-primary-600 rounded-full flex items-center justify-center shadow-lg shadow-primary-600/30"
             >
-              <link.icon class="w-6 h-6 text-white" />
+              <link.icon class="w-7 h-7 text-white" />
             </div>
           {:else}
-            <link.icon class="w-6 h-6" />
-            <span class="text-[10px] mt-1 font-medium">{link.label}</span>
+            <link.icon class="w-7 h-7" />
+            <span class="text-xs mt-1 font-medium">{link.label}</span>
           {/if}
         </a>
       {/each}
@@ -145,9 +146,5 @@
   /* Safe area insets for iOS */
   .safe-area-top {
     padding-top: env(safe-area-inset-top);
-  }
-
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
   }
 </style>
