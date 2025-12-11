@@ -56,6 +56,60 @@
     function getPreviewUrl(file: File): string {
         return URL.createObjectURL(file);
     }
+
+    // Budget Check Logic
+    import { AlertTriangle } from "lucide-svelte";
+
+    let budgetStatus = $state<"ok" | "warning" | "error">("ok");
+    let budgetMessage = $state("");
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    function checkBudget() {
+        const amount = parseFloat(
+            form?.values?.amount?.toString().replace(/,/g, "") ||
+                (
+                    document.getElementById("amount") as HTMLInputElement
+                )?.value?.replace(/,/g, "") ||
+                "0",
+        );
+        const date = (document.getElementById("date") as HTMLInputElement)
+            ?.value;
+        const categoryId = (
+            document.getElementById("category_id") as HTMLSelectElement
+        )?.value;
+        const departmentId = (
+            document.getElementById("department_id") as HTMLSelectElement
+        )?.value;
+
+        if (!amount || !date) {
+            budgetStatus = "ok";
+            return;
+        }
+
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(async () => {
+            try {
+                const res = await fetch("/api/check-budget", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        amount,
+                        date,
+                        categoryId,
+                        departmentId,
+                    }),
+                });
+                const data = await res.json();
+                budgetStatus = data.status;
+                budgetMessage = data.message || "";
+            } catch (e) {
+                console.error(e);
+            }
+        }, 500); // Debounce 500ms
+    }
+
+    // React to changes (Svelte 5 Runes or event listeners)
+    // Simple approach: Add onchange/oninput to inputs
 </script>
 
 <svelte:head>
@@ -141,6 +195,7 @@
                             ? 'border-red-500'
                             : ''}"
                         required
+                        onchange={checkBudget}
                     />
                     {#if form?.errors?.date}
                         <p class="text-red-500 text-xs mt-1">
@@ -165,6 +220,7 @@
                             ? 'border-red-500'
                             : ''}"
                         required
+                        oninput={checkBudget}
                     />
                     {#if form?.errors?.amount}
                         <p class="text-red-500 text-xs mt-1">
@@ -191,6 +247,7 @@
                             if (showCustomCategory) {
                                 target.value = "";
                             }
+                            checkBudget();
                         }}
                     >
                         <option value="">-- เลือกหมวดหมู่ --</option>
@@ -351,6 +408,26 @@
                         >{form?.values?.note_internal ?? ""}</textarea
                     >
                 </div>
+
+                <!-- Budget Alert -->
+                {#if budgetStatus === "error" || budgetStatus === "warning"}
+                    <div
+                        class="md:col-span-2 p-3 rounded-lg border flex items-start gap-3
+                        {budgetStatus === 'error'
+                            ? 'bg-red-50 border-red-200 text-red-700'
+                            : 'bg-yellow-50 border-yellow-200 text-yellow-700'}"
+                    >
+                        <AlertTriangle class="w-5 h-5 shrink-0 mt-0.5" />
+                        <div class="text-sm">
+                            <p class="font-bold">
+                                {budgetStatus === "error"
+                                    ? "ยอดเงินเกินงบประมาณ"
+                                    : "ยอดเงินใกล้เต็มงบประมาณ"}
+                            </p>
+                            <p>{budgetMessage}</p>
+                        </div>
+                    </div>
+                {/if}
             </div>
         </div>
 
@@ -396,6 +473,7 @@
                             ? 'border-red-500'
                             : ''}"
                         required
+                        onchange={checkBudget}
                     >
                         <option value="">-- เลือกแผนก --</option>
                         {#each departments as dept}
