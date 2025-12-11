@@ -63,6 +63,19 @@
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
+
+    // Check for recurring expenses
+    fetch('/api/check-recurring', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.processed > 0) {
+                // Refresh notifications if any were processed
+                // In a real app, we might invalidate('app:notifications')
+                console.log('Processed recurring expenses:', data.processed);
+            }
+        })
+        .catch(err => console.error('Failed to check recurring expenses', err));
+
     return () => window.removeEventListener("resize", checkMobile);
   });
 
@@ -135,7 +148,7 @@
 
     <!-- Footer -->
     <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-      <p class="text-xs text-gray-400 text-center">© 2024 Liqflow v1.0</p>
+      <p class="text-xs text-gray-400 text-center">© 2025 Liqflow v1.0</p>
     </div>
   </aside>
 
