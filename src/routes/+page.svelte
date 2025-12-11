@@ -20,7 +20,7 @@
         formatPercentageChange,
     } from "$lib/utils";
     import { onMount } from "svelte";
-    import Chart from "chart.js/auto";
+    // import Chart from "chart.js/auto"; // Removed static import to prevent SSR issues
 
     let { data } = $props();
 
@@ -41,8 +41,8 @@
     // Charts
     let monthlyChartCanvas: HTMLCanvasElement;
     let categoryChartCanvas: HTMLCanvasElement;
-    let monthlyChart: Chart | null = null;
-    let categoryChart: Chart | null = null;
+    let monthlyChart: any = null;
+    let categoryChart: any = null;
 
     // Color map สำหรับ category
     const colorMap: Record<string, string> = {
@@ -56,7 +56,10 @@
         gray: "#6b7280",
     };
 
-    onMount(() => {
+    onMount(async () => {
+        // Dynamic import to allow SSR to work without window errors
+        const { default: Chart } = await import("chart.js/auto");
+
         // สร้าง Monthly Line Chart
         if (monthlyChartCanvas && data.monthlyExpenses.length > 0) {
             const ctx = monthlyChartCanvas.getContext("2d");
@@ -103,7 +106,7 @@
                             titleFont: { size: 14 },
                             bodyFont: { size: 13 },
                             callbacks: {
-                                label: (ctx) =>
+                                label: (ctx: any) =>
                                     formatCurrency(ctx.raw as number),
                             },
                         },
@@ -113,7 +116,7 @@
                             beginAtZero: true,
                             grid: { color: "rgba(0, 0, 0, 0.05)" },
                             ticks: {
-                                callback: (value) =>
+                                callback: (value: any) =>
                                     formatCurrencyCompact(value as number),
                             },
                         },
@@ -154,7 +157,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: (ctx) => {
+                                label: (ctx: any) => {
                                     const value = ctx.raw as number;
                                     const total = (
                                         ctx.dataset.data as number[]

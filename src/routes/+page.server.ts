@@ -134,8 +134,9 @@ export const load: PageServerLoad = async () => {
     // จัดกลุ่มตาม category
     const categoryMap = new Map<string, { name: string; icon: string; color: string; total: number; count: number }>();
     for (const expense of categoryResult.data ?? []) {
-        const expenseData = expense as unknown as { category: Array<{ id: string; name: string; icon: string; color: string }> | null; amount: number };
-        const cat = expenseData.category?.[0];
+        // Supabase returns relations as objects (not arrays) for many-to-one
+        const expenseData = expense as unknown as { category: { id: string; name: string; icon: string; color: string } | null; amount: number };
+        const cat = expenseData.category;
         if (!cat) continue;
         const existing = categoryMap.get(cat.id) ?? { name: cat.name, icon: cat.icon || '📦', color: cat.color, total: 0, count: 0 };
         categoryMap.set(cat.id, {
@@ -155,8 +156,9 @@ export const load: PageServerLoad = async () => {
     // จัดกลุ่มตาม department
     const deptMap = new Map<string, { name: string; total: number; count: number }>();
     for (const expense of departmentResult.data ?? []) {
-        const expenseData = expense as unknown as { department: Array<{ id: string; name: string }> | null; amount: number };
-        const dept = expenseData.department?.[0];
+        // Supabase returns relations as objects (not arrays) for many-to-one
+        const expenseData = expense as unknown as { department: { id: string; name: string } | null; amount: number };
+        const dept = expenseData.department;
         if (!dept) continue;
         const existing = deptMap.get(dept.id) ?? { name: dept.name, total: 0, count: 0 };
         deptMap.set(dept.id, {
