@@ -22,6 +22,41 @@
   // สถานะเปิด/ปิด sidebar บน mobile
   let sidebarOpen = $state(false);
 
+  // Derived state: มี notification ที่ยังไม่อ่านหรือไม่
+  // ใช้ local state เพื่อให้ update ทันทีโดยไม่ต้องรอ server fetch ใหม่
+  let hasUnread = $state(false);
+
+  $effect(() => {
+    // Sync initial state from data
+    if (data.notifications && data.notifications.length > 0) {
+      // ในที่นี้เรา assume ว่า data.notifications ที่ load มาคือที่ unread (ตาม query server)
+      // หรือถ้าอยากแม่นยำกว่านี้ต้องดู field is_read
+      hasUnread = true;
+    }
+  });
+
+  async function handleBellClick() {
+    showNotifications = !showNotifications;
+
+    if (showNotifications && hasUnread) {
+      // ถ้าเปิด dropdown และมี unread -> mark as read
+      hasUnread = false; // Optimistic update: ลบจุดแดงทันที
+
+      const unreadIds = data.notifications?.map((n: any) => n.id) || [];
+      if (unreadIds.length > 0) {
+        try {
+          await fetch("/api/notifications/mark-read", {
+            method: "POST",
+            body: JSON.stringify({ ids: unreadIds }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (error) {
+          console.error("Failed to mark notifications as read", error);
+        }
+      }
+    }
+  }
+
   onMount(() => {
     const checkMobile = () => {
       isMobile = window.innerWidth < 1024;
@@ -107,90 +142,89 @@
   <div
     class="lg:pl-64 pb-[calc(4rem_+_env(safe-area-inset-bottom,_20px))] lg:pb-0"
   >
-
-  {#snippet notificationArea()}
-    <div class="relative">
-      <button
-        class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full relative"
-        onclick={() => (showNotifications = !showNotifications)}
-      >
-        <Bell class="w-6 h-6" />
-        {#if data.notifications?.length > 0}
-          <span
-            class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
-          ></span>
-        {/if}
-      </button>
-
-      <!-- Dropdown -->
-      {#if showNotifications}
-        <div
-          class="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
-          transition:fly={{ y: -10, duration: 200 }}
+    {#snippet notificationArea()}
+      <div class="relative">
+        <button
+          class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full relative"
+          onclick={handleBellClick}
         >
+          <Bell class="w-6 h-6" />
+          {#if hasUnread}
+            <span
+              class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
+            ></span>
+          {/if}
+        </button>
+
+        <!-- Dropdown -->
+        {#if showNotifications}
           <div
-            class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center"
+            class="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+            transition:fly={{ y: -10, duration: 200 }}
           >
-            <h3 class="font-semibold text-gray-900">การแจ้งเตือน</h3>
-            <span class="text-xs text-gray-500"
-              >{data.notifications?.length ?? 0} ใหม่</span
+            <div
+              class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center"
             >
-          </div>
-          <div class="max-h-[60vh] overflow-y-auto">
-            {#if data.notifications?.length > 0}
-              {#each data.notifications as notif}
-                <a
-                  href={notif.link}
-                  class="block p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors"
-                  onclick={() => (showNotifications = false)}
-                >
-                  <div class="flex gap-3">
-                    {#if notif.type === "success"}
-                      <div
-                        class="w-2 h-2 mt-2 rounded-full bg-green-500 shrink-0"
-                      ></div>
-                    {:else if notif.type === "error"}
-                      <div
-                        class="w-2 h-2 mt-2 rounded-full bg-red-500 shrink-0"
-                      ></div>
-                    {:else}
-                      <div
-                        class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"
-                      ></div>
-                    {/if}
-                    <div>
-                      <p class="text-sm font-medium text-gray-900">
-                        {notif.title}
-                      </p>
-                      <p class="text-xs text-gray-500 mt-0.5">
-                        {notif.message}
-                      </p>
-                      <p class="text-[10px] text-gray-400 mt-2">
-                        {new Date(notif.created_at).toLocaleString("th-TH")}
-                      </p>
+              <h3 class="font-semibold text-gray-900">การแจ้งเตือน</h3>
+              <span class="text-xs text-gray-500"
+                >{data.notifications?.length ?? 0} ใหม่</span
+              >
+            </div>
+            <div class="max-h-[60vh] overflow-y-auto">
+              {#if data.notifications?.length > 0}
+                {#each data.notifications as notif}
+                  <a
+                    href={notif.link}
+                    class="block p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    onclick={() => (showNotifications = false)}
+                  >
+                    <div class="flex gap-3">
+                      {#if notif.type === "success"}
+                        <div
+                          class="w-2 h-2 mt-2 rounded-full bg-green-500 shrink-0"
+                        ></div>
+                      {:else if notif.type === "error"}
+                        <div
+                          class="w-2 h-2 mt-2 rounded-full bg-red-500 shrink-0"
+                        ></div>
+                      {:else}
+                        <div
+                          class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"
+                        ></div>
+                      {/if}
+                      <div>
+                        <p class="text-sm font-medium text-gray-900">
+                          {notif.title}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                          {notif.message}
+                        </p>
+                        <p class="text-[10px] text-gray-400 mt-2">
+                          {new Date(notif.created_at).toLocaleString("th-TH")}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              {/each}
-            {:else}
-              <div class="p-8 text-center text-gray-400">
-                <Bell class="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p class="text-sm">ไม่มีการแจ้งเตือนใหม่</p>
-              </div>
-            {/if}
+                  </a>
+                {/each}
+              {:else}
+                <div class="p-8 text-center text-gray-400">
+                  <Bell class="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p class="text-sm">ไม่มีการแจ้งเตือนใหม่</p>
+                </div>
+              {/if}
+            </div>
           </div>
-        </div>
 
-        <!-- Backdrop to close -->
-        <div
-          class="fixed inset-0 z-40"
-          onclick={() => (showNotifications = false)}
-        ></div>
-      {/if}
-    </div>
-  {/snippet}
+          <!-- Backdrop to close -->
+          <div
+            class="fixed inset-0 z-40"
+            onclick={() => (showNotifications = false)}
+          ></div>
+        {/if}
+      </div>
+    {/snippet}
 
-  <!-- Mobile Layout -->
+    <!-- Mobile Layout -->
     {#if isMobile}
       <div class="h-screen w-screen bg-gray-50 flex flex-col">
         <!-- Header -->
@@ -221,33 +255,35 @@
         class="hidden lg:flex h-16 bg-white border-b border-gray-200 px-8 items-center justify-between sticky top-0 z-30"
       >
         <h2 class="text-xl font-bold text-gray-800">
-             {#if $page.url.pathname === '/'}
-                Dashboard
-             {:else if $page.url.pathname === '/expenses'}
-                รายการเบิกจ่าย
-             {:else if $page.url.pathname === '/budgets'}
-                งบประมาณ
-             {:else}
-                Liqflow Expense
-             {/if}
+          {#if $page.url.pathname === "/"}
+            Dashboard
+          {:else if $page.url.pathname === "/expenses"}
+            รายการเบิกจ่าย
+          {:else if $page.url.pathname === "/budgets"}
+            งบประมาณ
+          {:else}
+            Liqflow Expense
+          {/if}
         </h2>
         <div class="flex items-center gap-4">
-             <!-- User Profile Placeholder -->
-             <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-gray-700">Manager Somchai</span>
-                 <div class="w-8 h-8 bg-gray-200 rounded-full overflow-hidden">
-                    <img
-                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Somchai"
-                        alt="Profile"
-                        class="w-full h-full object-cover"
-                    />
-                </div>
-             </div>
-             <!-- Notifications -->
-             {@render notificationArea()}
+          <!-- User Profile Placeholder -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-gray-700"
+              >Manager Somchai</span
+            >
+            <div class="w-8 h-8 bg-gray-200 rounded-full overflow-hidden">
+              <img
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Somchai"
+                alt="Profile"
+                class="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          <!-- Notifications -->
+          {@render notificationArea()}
         </div>
       </header>
-      
+
       <!-- Mobile Header (hidden on lg) -->
       <header
         class="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 lg:hidden safe-area-top"
