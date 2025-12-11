@@ -309,10 +309,10 @@
 
   <!-- Mobile Bottom Navigation (iOS Style) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-xl border-t border-gray-200 m-0 p-0"
-    style="padding-bottom: env(safe-area-inset-bottom, 0px); margin: 0; width: 100vw;"
+    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-xl border-t border-gray-200"
+    style="margin: 0; width: 100vw; padding: 0; padding-bottom: env(safe-area-inset-bottom, 0px);"
   >
-    <div class="flex items-center justify-around h-16 relative px-0">
+    <div class="flex items-center justify-around h-16 relative">
       {#each navLinks as link, i}
         {@const active = isActive(link.href, $page.url.pathname)}
         <a
