@@ -291,7 +291,7 @@
         <div class="flex items-center justify-center px-4 py-3">
           <div class="flex items-center gap-2">
             <img
-              src="/logo.png"
+              src="/logo.png?v=2"
               alt="Liqflow Logo"
               class="w-8 h-8 rounded-lg object-cover"
             />
