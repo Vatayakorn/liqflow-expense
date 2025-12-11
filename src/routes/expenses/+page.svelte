@@ -145,7 +145,7 @@
                     disabled={data.expenses.length === 0}
                 >
                     <Download class="w-5 h-5" />
-                    <span class="hidden sm:inline">Export</span>
+                    <span>Export</span>
                 </button>
 
                 {#if showExportMenu}
@@ -158,7 +158,7 @@
 
                     <!-- Dropdown Menu -->
                     <div
-                        class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
+                        class="absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
                     >
                         <button
                             class="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
