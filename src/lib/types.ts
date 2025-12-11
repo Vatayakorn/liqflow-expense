@@ -176,3 +176,20 @@ export interface BudgetWithUsage extends BudgetWithRelations {
     status: 'safe' | 'warning' | 'danger'; // สถานะ
 }
 
+export interface RecurringExpense {
+    id: string;
+    description: string;
+    amount: number;
+    category_id: string;
+    payment_method_id: string;
+    department_id: string;
+    vendor: string | null;
+    frequency: 'weekly' | 'monthly' | 'yearly';
+    start_date: string;
+    next_due_date: string;
+    active: boolean;
+    created_by_name: string;
+    created_at: string;
+    updated_at: string;
+}
+

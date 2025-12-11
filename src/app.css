@@ -171,3 +171,8 @@ a {
     padding-bottom: max(env(safe-area-inset-bottom), 8px);
   }
 }
+
+/* Utility for bottom padding accounting for fixed nav and safe area */
+.pb-safe-bottom {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom) + 24px);
+}

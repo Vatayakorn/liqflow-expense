@@ -11,6 +11,7 @@
     Menu,
     X,
     Bell,
+    Repeat,
   } from "lucide-svelte";
 
   let { data, children } = $props();
@@ -70,6 +71,7 @@
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/expenses", label: "รายจ่าย", icon: Receipt },
     { href: "/expenses/new", label: "เพิ่ม", icon: PlusCircle },
+    { href: "/recurring", label: "ประจำ", icon: Repeat },
     { href: "/budgets", label: "งบประมาณ", icon: PiggyBank },
   ];
 
@@ -308,8 +310,7 @@
 
   <!-- Mobile Bottom Navigation (iOS Style) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-xl border-t border-gray-200 w-full"
-    style="padding-bottom: env(safe-area-inset-bottom);"
+    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white border-t border-gray-200 w-full pb-[env(safe-area-inset-bottom)]"
   >
     <div class="flex items-center justify-around h-16 relative">
       {#each navLinks as link, i}
