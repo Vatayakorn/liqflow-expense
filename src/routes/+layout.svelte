@@ -10,7 +10,6 @@
     PiggyBank,
     Menu,
     X,
-    BookOpen,
     Bell,
   } from "lucide-svelte";
 
@@ -232,11 +231,11 @@
           class="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between shrink-0 safe-top"
         >
           <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center"
-            >
-              <BookOpen class="w-5 h-5 text-red-500" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Liqflow Logo"
+              class="w-8 h-8 rounded-lg object-cover"
+            />
             <h1 class="font-bold text-gray-900 text-lg">Liqflow Expense</h1>
           </div>
 
@@ -309,8 +308,8 @@
 
   <!-- Mobile Bottom Navigation (iOS Style) -->
   <nav
-    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-xl border-t border-gray-200"
-    style="margin: 0; width: 100vw; padding: 0; padding-bottom: env(safe-area-inset-bottom, 0px);"
+    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/80 backdrop-blur-xl border-t border-gray-200 w-full"
+    style="padding-bottom: env(safe-area-inset-bottom);"
   >
     <div class="flex items-center justify-around h-16 relative">
       {#each navLinks as link, i}
