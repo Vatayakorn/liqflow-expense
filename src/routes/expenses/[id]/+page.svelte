@@ -14,6 +14,7 @@
         FileText,
         Image as ImageIcon,
         ExternalLink,
+        Clock,
     } from "lucide-svelte";
     import { enhance } from "$app/forms";
     import {
@@ -368,31 +369,79 @@
                 </div>
             </div>
 
-            <!-- Timeline (อาจเพิ่มในอนาคต) -->
+            <!-- Timeline -->
             <div class="card p-6">
-                <h3 class="text-sm font-medium text-gray-500 mb-4">
-                    ข้อมูลระบบ
+                <h3
+                    class="text-sm font-medium text-gray-500 mb-4 flex items-center gap-2"
+                >
+                    <Clock class="w-4 h-4" />
+                    ประวัติการทำรายการ
                 </h3>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">สร้างเมื่อ</span>
-                        <span class="text-gray-900"
-                            >{formatDateLong(expense.created_at)}</span
-                        >
+
+                {#if data.auditLogs && data.auditLogs.length > 0}
+                    <div
+                        class="relative pl-4 space-y-6 before:absolute before:inset-y-0 before:left-[7px] before:w-[2px] before:bg-gray-100"
+                    >
+                        {#each data.auditLogs as log}
+                            <div class="relative">
+                                <!-- Dot -->
+                                <div
+                                    class="absolute -left-[21px] top-1 w-4 h-4 rounded-full border-2 border-white
+                                    {log.action === 'create'
+                                        ? 'bg-blue-500'
+                                        : log.action === 'approve'
+                                          ? 'bg-green-500'
+                                          : log.action === 'reject'
+                                            ? 'bg-red-500'
+                                            : log.action === 'pay'
+                                              ? 'bg-purple-500'
+                                              : 'bg-gray-400'}"
+                                ></div>
+
+                                <div>
+                                    <p
+                                        class="text-sm font-medium text-gray-900"
+                                    >
+                                        {#if log.action === "create"}
+                                            สร้างรายการใหม่
+                                        {:else if log.action === "approve"}
+                                            อนุมัติรายการ
+                                        {:else if log.action === "reject"}
+                                            ปฏิเสธรายการ
+                                        {:else if log.action === "pay"}
+                                            ดำเนินการจ่ายเงิน
+                                        {:else if log.action === "update"}
+                                            แก้ไขข้อมูล
+                                        {:else}
+                                            {log.action}
+                                        {/if}
+                                    </p>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        โดย <span
+                                            class="font-medium text-gray-700"
+                                            >{log.actor_name}</span
+                                        >
+                                        {#if log.actor_role}({log.actor_role}){/if}
+                                    </p>
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        {formatDateLong(log.created_at)}
+                                    </p>
+                                    {#if log.comment}
+                                        <div
+                                            class="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded border border-gray-100"
+                                        >
+                                            "{log.comment}"
+                                        </div>
+                                    {/if}
+                                </div>
+                            </div>
+                        {/each}
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">แก้ไขล่าสุด</span>
-                        <span class="text-gray-900"
-                            >{formatDateLong(expense.updated_at)}</span
-                        >
+                {:else}
+                    <div class="text-center py-4 text-gray-400 text-sm">
+                        ไม่มีประวัติการทำรายการ
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-500">ID</span>
-                        <span class="text-gray-400 font-mono text-xs"
-                            >{expense.id.slice(0, 8)}...</span
-                        >
-                    </div>
-                </div>
+                {/if}
             </div>
         </div>
     </div>

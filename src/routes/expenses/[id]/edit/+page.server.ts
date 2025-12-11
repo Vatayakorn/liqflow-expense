@@ -3,6 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { supabase, uploadFile, deleteFile } from '$lib/supabase';
 import type { AttachmentType } from '$lib/types';
+import { logAudit } from '$lib/audit';
 
 export const load: PageServerLoad = async ({ params }) => {
     // โหลด expense พร้อม relations
@@ -241,6 +242,15 @@ export const actions: Actions = {
                 console.error('Attachment insert error:', attachError);
             }
         }
+
+        // บันทึก Audit Log
+        await logAudit({
+            expenseId: params.id!,
+            action: 'update',
+            actorName: createdByName, // หรือใช้ชื่อคนแก้ไขจริง
+            actorRole: 'Editor',
+            comment: 'แก้ไขรายละเอียดรายการ'
+        });
 
         // Redirect ไปหน้ารายละเอียด
         throw redirect(303, `/expenses/${params.id}`);

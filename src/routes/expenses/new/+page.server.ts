@@ -3,6 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { supabase, uploadFile } from '$lib/supabase';
 import type { AttachmentType } from '$lib/types';
+import { logAudit } from '$lib/audit';
 
 export const load: PageServerLoad = async () => {
     // หน้านี้ใช้ lookup data จาก layout แล้ว
