@@ -12,10 +12,10 @@ export default defineConfig({
 			},
 			includeAssets: ['favicon.png', 'apple-touch-icon.png'],
 			manifest: {
-				name: 'Liqflow Expense',
-				short_name: 'Expense',
+				name: 'LiqflowExpense',
+				short_name: 'LiqflowExpense',
 				description: 'แอปบันทึกรายจ่ายบริษัท',
-				theme_color: '#4f46e5',
+				theme_color: '#2563eb',
 				background_color: '#f9fafb',
 				display: 'standalone',
 				orientation: 'portrait',
