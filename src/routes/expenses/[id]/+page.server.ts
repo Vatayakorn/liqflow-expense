@@ -3,23 +3,24 @@ import type { PageServerLoad, Actions } from './$types';
 import { error, fail, redirect } from '@sveltejs/kit';
 import { supabase, deleteFile } from '$lib/supabase';
 import { logAudit } from '$lib/audit';
+import { createNotification } from '$lib/notification';
+import type { ExpenseStatus } from '$lib/types';
 
 export const load: PageServerLoad = async ({ params }) => {
     // โหลด expense พร้อม relations
-    const { data: expense, error: fetchError } = await supabase
+    const { data: expense, error: err } = await supabase
         .from('expenses')
         .select(`
-      *,
-      category:categories(*),
-      department:departments(*),
-      payment_method:payment_methods(*),
-      attachments(*)
-    `)
+            *,
+            category: categories(*),
+            department: departments(*),
+            payment_method: payment_methods(*)
+        `)
         .eq('id', params.id)
         .single();
 
-    if (fetchError || !expense) {
-        throw error(404, 'ไม่พบรายการนี้');
+    if (err || !expense) {
+        throw error(404, 'ไม่พบรายการเบิกจ่ายนี้');
     }
 
     // โหลด Audit Logs
@@ -29,17 +30,32 @@ export const load: PageServerLoad = async ({ params }) => {
         .eq('expense_id', params.id)
         .order('created_at', { ascending: false });
 
-    return { expense, auditLogs: auditLogs ?? [] };
+    return {
+        expense,
+        auditLogs: auditLogs ?? []
+    };
 };
+
+// Helper function to map status to audit action
+function getAuditAction(status: ExpenseStatus): 'approve' | 'reject' | 'pay' | 'update' {
+    switch (status) {
+        case 'approved': return 'approve';
+        case 'rejected': return 'reject';
+        case 'paid': return 'pay';
+        default: return 'update';
+    }
+}
 
 export const actions: Actions = {
     // เปลี่ยนสถานะ
     updateStatus: async ({ request, params }) => {
         const formData = await request.formData();
-        const newStatus = formData.get('status') as string;
+        const status = formData.get('status') as string;
+        const comment = formData.get('comment') as string;
 
-        if (!['draft', 'approved', 'rejected', 'paid'].includes(newStatus)) {
-            return fail(400, { error: 'สถานะไม่ถูกต้อง' });
+        // Validation
+        if (!status) {
+            return fail(400, { error: 'Status is required' });
         }
 
         // ดึงสถานะเดิมก่อนอัปเดต
@@ -50,43 +66,77 @@ export const actions: Actions = {
             .single();
 
         const oldStatus = currentExpense?.status;
+        const actorName = 'Manager Somchai'; // TODO: Mock user
+        let auditComment = comment || ''; // Initialize audit comment variable
 
+        // Update status
         const { error: updateError } = await supabase
             .from('expenses')
-            .update({ status: newStatus })
+            .update({
+                status,
+                updated_at: new Date().toISOString()
+            })
             .eq('id', params.id);
 
         if (updateError) {
-            return fail(500, { error: 'เกิดข้อผิดพลาดในการอัปเดต' });
+            return fail(500, { error: 'Failed to update status' });
         }
 
         // บันทึก Audit Log
         let action: 'approve' | 'reject' | 'pay' | 'update' = 'update';
-        let comment = '';
 
-        if (newStatus === 'approved') {
+        if (status === 'approved') {
             action = 'approve';
-            comment = 'อนุมัติรายการ';
-        } else if (newStatus === 'rejected') {
+            auditComment = auditComment || 'อนุมัติรายการ';
+        } else if (status === 'rejected') {
             action = 'reject';
-            comment = 'ปฏิเสธรายการ';
-        } else if (newStatus === 'paid') {
+            auditComment = auditComment || 'ปฏิเสธรายการ';
+        } else if (status === 'paid') {
             action = 'pay';
-            comment = 'ดำเนินการจ่ายเงินแล้ว';
-        } else if (newStatus === 'draft') {
+            auditComment = auditComment || 'ดำเนินการจ่ายเงินแล้ว';
+        } else if (status === 'draft') {
             action = 'update';
-            comment = 'แก้ไขสถานะกลับเป็นแบบร่าง';
+            auditComment = auditComment || 'แก้ไขสถานะกลับเป็นแบบร่าง';
         }
 
         await logAudit({
             expenseId: params.id!,
             action,
-            actorName: 'Admin (Demo)', // TODO: ใช้ชื่อจริงจาก Auth
-            actorRole: 'Admin',
+            actorName: actorName,
+            actorRole: 'Approver',
             oldStatus: oldStatus ?? undefined,
-            newStatus,
-            comment
+            newStatus: status as ExpenseStatus,
+            comment: auditComment || undefined
         });
+
+        // 3. Notification
+        let notifType: 'success' | 'warning' | 'error' | 'info' = 'info';
+        let notifTitle = '';
+        let notifMessage = '';
+
+        if (status === 'approved') {
+            notifType = 'success';
+            notifTitle = 'รายการได้รับการอนุมัติ';
+            notifMessage = `รายการเบิกของคุณได้รับการอนุมัติแล้ว โดย ${actorName}`;
+        } else if (status === 'rejected') {
+            notifType = 'error';
+            notifTitle = 'รายการถูกปฏิเสธ';
+            notifMessage = `รายการเบิกของคุณถูกปฏิเสธ: ${auditComment || '-'}`;
+        } else if (status === 'paid') {
+            notifType = 'success';
+            notifTitle = 'โอนเงินแล้ว';
+            notifMessage = `รายการเบิกของคุณได้รับการโอนเงินเรียบร้อยแล้ว`;
+        }
+
+        if (notifTitle) {
+            await createNotification({
+                type: notifType,
+                title: notifTitle,
+                message: notifMessage,
+                link: `/expenses/${params.id}`,
+                targetRole: 'user' // แจ้งกลับไปที่ User
+            });
+        }
 
         return { success: true };
     },

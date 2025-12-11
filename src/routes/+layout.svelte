@@ -1,6 +1,8 @@
 <script lang="ts">
   import "../app.css";
   import { page } from "$app/stores";
+  import { onMount } from "svelte";
+  import { fly } from "svelte/transition";
   import {
     LayoutDashboard,
     Receipt,
@@ -8,12 +10,26 @@
     PiggyBank,
     Menu,
     X,
+    BookOpen,
+    Bell,
   } from "lucide-svelte";
 
-  let { children } = $props();
+  let { data, children } = $props();
 
+  // State
+  let isMobile = $state(false);
+  let showNotifications = $state(false);
   // สถานะเปิด/ปิด sidebar บน mobile
   let sidebarOpen = $state(false);
+
+  onMount(() => {
+    const checkMobile = () => {
+      isMobile = window.innerWidth < 1024;
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  });
 
   // ลิงก์ในเมนู (ปุ่มเพิ่มอยู่ตรงกลาง index=2)
   const navLinks = [
@@ -91,26 +107,168 @@
   <div
     class="lg:pl-64 pb-[calc(4rem_+_env(safe-area-inset-bottom,_20px))] lg:pb-0"
   >
-    <!-- Mobile Header -->
-    <header
-      class="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 lg:hidden safe-area-top"
-    >
-      <div class="flex items-center justify-center px-4 py-3">
-        <div class="flex items-center gap-2">
-          <img
-            src="/logo.png"
-            alt="Liqflow Logo"
-            class="w-8 h-8 rounded-lg object-cover"
-          />
-          <span class="font-bold text-gray-900">Liqflow</span>
-        </div>
-      </div>
-    </header>
 
-    <!-- Page Content -->
-    <main class="min-h-screen">
-      {@render children()}
-    </main>
+  {#snippet notificationArea()}
+    <div class="relative">
+      <button
+        class="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full relative"
+        onclick={() => (showNotifications = !showNotifications)}
+      >
+        <Bell class="w-6 h-6" />
+        {#if data.notifications?.length > 0}
+          <span
+            class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"
+          ></span>
+        {/if}
+      </button>
+
+      <!-- Dropdown -->
+      {#if showNotifications}
+        <div
+          class="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+          transition:fly={{ y: -10, duration: 200 }}
+        >
+          <div
+            class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center"
+          >
+            <h3 class="font-semibold text-gray-900">การแจ้งเตือน</h3>
+            <span class="text-xs text-gray-500"
+              >{data.notifications?.length ?? 0} ใหม่</span
+            >
+          </div>
+          <div class="max-h-[60vh] overflow-y-auto">
+            {#if data.notifications?.length > 0}
+              {#each data.notifications as notif}
+                <a
+                  href={notif.link}
+                  class="block p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  onclick={() => (showNotifications = false)}
+                >
+                  <div class="flex gap-3">
+                    {#if notif.type === "success"}
+                      <div
+                        class="w-2 h-2 mt-2 rounded-full bg-green-500 shrink-0"
+                      ></div>
+                    {:else if notif.type === "error"}
+                      <div
+                        class="w-2 h-2 mt-2 rounded-full bg-red-500 shrink-0"
+                      ></div>
+                    {:else}
+                      <div
+                        class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"
+                      ></div>
+                    {/if}
+                    <div>
+                      <p class="text-sm font-medium text-gray-900">
+                        {notif.title}
+                      </p>
+                      <p class="text-xs text-gray-500 mt-0.5">
+                        {notif.message}
+                      </p>
+                      <p class="text-[10px] text-gray-400 mt-2">
+                        {new Date(notif.created_at).toLocaleString("th-TH")}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              {/each}
+            {:else}
+              <div class="p-8 text-center text-gray-400">
+                <Bell class="w-8 h-8 mx-auto mb-2 opacity-20" />
+                <p class="text-sm">ไม่มีการแจ้งเตือนใหม่</p>
+              </div>
+            {/if}
+          </div>
+        </div>
+
+        <!-- Backdrop to close -->
+        <div
+          class="fixed inset-0 z-40"
+          onclick={() => (showNotifications = false)}
+        ></div>
+      {/if}
+    </div>
+  {/snippet}
+
+  <!-- Mobile Layout -->
+    {#if isMobile}
+      <div class="h-screen w-screen bg-gray-50 flex flex-col">
+        <!-- Header -->
+        <header
+          class="h-16 bg-white border-b border-gray-200 px-4 flex items-center justify-between shrink-0 safe-top"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center"
+            >
+              <BookOpen class="w-5 h-5 text-red-500" />
+            </div>
+            <h1 class="font-bold text-gray-900 text-lg">Liqflow Expense</h1>
+          </div>
+
+          <!-- Notifications -->
+          {@render notificationArea()}
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto pb-safe-bottom">
+          {@render children()}
+        </main>
+      </div>
+    {:else}
+      <!-- Desktop Header -->
+      <header
+        class="hidden lg:flex h-16 bg-white border-b border-gray-200 px-8 items-center justify-between sticky top-0 z-30"
+      >
+        <h2 class="text-xl font-bold text-gray-800">
+             {#if $page.url.pathname === '/'}
+                Dashboard
+             {:else if $page.url.pathname === '/expenses'}
+                รายการเบิกจ่าย
+             {:else if $page.url.pathname === '/budgets'}
+                งบประมาณ
+             {:else}
+                Liqflow Expense
+             {/if}
+        </h2>
+        <div class="flex items-center gap-4">
+             <!-- User Profile Placeholder -->
+             <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-700">Manager Somchai</span>
+                 <div class="w-8 h-8 bg-gray-200 rounded-full overflow-hidden">
+                    <img
+                        src="https://api.dicebear.com/7.x/avataaars/svg?seed=Somchai"
+                        alt="Profile"
+                        class="w-full h-full object-cover"
+                    />
+                </div>
+             </div>
+             <!-- Notifications -->
+             {@render notificationArea()}
+        </div>
+      </header>
+      
+      <!-- Mobile Header (hidden on lg) -->
+      <header
+        class="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 lg:hidden safe-area-top"
+      >
+        <div class="flex items-center justify-center px-4 py-3">
+          <div class="flex items-center gap-2">
+            <img
+              src="/logo.png"
+              alt="Liqflow Logo"
+              class="w-8 h-8 rounded-lg object-cover"
+            />
+            <span class="font-bold text-gray-900">Liqflow</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="min-h-screen">
+        {@render children()}
+      </main>
+    {/if}
   </div>
 
   <!-- Mobile Bottom Navigation (iOS Style) -->

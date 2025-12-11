@@ -4,6 +4,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import { supabase, uploadFile } from '$lib/supabase';
 import type { AttachmentType } from '$lib/types';
 import { logAudit } from '$lib/audit';
+import { createNotification } from '$lib/notification';
+import { formatCurrency } from '$lib/utils';
 
 export const load: PageServerLoad = async () => {
     // หน้านี้ใช้ lookup data จาก layout แล้ว
@@ -139,6 +141,28 @@ export const actions: Actions = {
             return fail(500, {
                 error: 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่',
                 values: Object.fromEntries(formData)
+            });
+        }
+
+        // Post-insert actions
+        if (expense) {
+            // 1. Audit Log
+            await logAudit({
+                expenseId: expense.id,
+                action: 'create',
+                actorName: createdByName,
+                actorRole: 'Requester',
+                newStatus: status,
+                comment: 'สร้างรายการขอเบิกใหม่'
+            });
+
+            // 2. Notification (To Manager/Admin)
+            await createNotification({
+                type: 'info',
+                title: 'มีรายการเบิกใหม่',
+                message: `${createdByName} ได้สร้างรายการเบิกใหม่ ${formatCurrency(amount)}`,
+                link: `/expenses/${expense.id}`,
+                targetRole: 'admin'
             });
         }
 
