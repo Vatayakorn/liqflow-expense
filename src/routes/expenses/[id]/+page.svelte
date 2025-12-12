@@ -449,10 +449,18 @@
 
 <!-- Delete Confirmation Modal -->
 {#if showDeleteModal}
+    <!-- Backdrop -->
     <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-40"
+        style="background-color: rgba(0, 0, 0, 0.6);"
+    ></div>
+
+    <!-- Modal -->
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background-color: transparent;"
     >
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
+        <div class="card max-w-md w-full p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">
                 ยืนยันการลบ
             </h3>

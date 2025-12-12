@@ -369,11 +369,11 @@ body {
   border-color: #1a1a1a !important;
 }
 
-.dark .divide-y > * {
+.dark .divide-y>* {
   border-color: #1a1a1a !important;
 }
 
-.dark .divide-gray-100 > * {
+.dark .divide-gray-100>* {
   border-color: #1a1a1a !important;
 }
 
@@ -436,6 +436,14 @@ body {
   background-color: #1a1a1a !important;
 }
 
+/* Progress bar track (container) - more visible in dark mode */
+.dark .h-3.bg-gray-100,
+.dark .h-2.bg-gray-100,
+.dark .h-4.bg-gray-100,
+.dark .progress-bar-track {
+  background-color: #333333 !important;
+}
+
 /* Dark mode for charts/graphs */
 .dark canvas {
   background-color: transparent !important;
@@ -446,6 +454,16 @@ body {
   background-color: #0a0a0a !important;
   border-color: #1a1a1a !important;
   color: #ffffff !important;
+}
+
+/* Dark mode for fixed modals (like delete confirmation) */
+.dark .fixed .bg-white,
+.dark .z-50 .bg-white {
+  background-color: #0a0a0a !important;
+}
+
+.dark .dark\\:bg-zinc-900 {
+  background-color: #0a0a0a !important;
 }
 
 /* Dark mode for colored backgrounds */
@@ -609,4 +627,34 @@ a {
 /* Utility for bottom padding accounting for fixed nav and safe area */
 .pb-safe-bottom {
   padding-bottom: calc(4rem + env(safe-area-inset-bottom) + 24px);
+}
+
+/* Force standard colors to be visible in dark mode */
+.dark .bg-green-500 {
+  background-color: #22c55e !important;
+}
+
+.dark .bg-red-500 {
+  background-color: #ef4444 !important;
+}
+
+.dark .bg-amber-500 {
+  background-color: #f59e0b !important;
+}
+
+.dark .bg-blue-500 {
+  background-color: #3b82f6 !important;
+}
+
+/* Fix transparent backgrounds (backdrops) in dark mode */
+.dark .bg-black\/50 {
+  background-color: rgb(0 0 0 / 0.5) !important;
+}
+
+.dark .bg-black\/60 {
+  background-color: rgb(0 0 0 / 0.6) !important;
+}
+
+.dark .bg-gray-900\/70 {
+  background-color: rgb(17 24 39 / 0.7) !important;
 }

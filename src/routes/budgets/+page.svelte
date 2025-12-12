@@ -240,7 +240,7 @@
                             </span>
                         </div>
                         <div
-                            class="h-3 bg-gray-100 rounded-full overflow-hidden"
+                            class="h-3 bg-gray-100 rounded-full overflow-hidden progress-bar-track"
                         >
                             <div
                                 class="h-full rounded-full transition-all duration-500 {getProgressColor(
@@ -327,9 +327,14 @@
 <!-- Create Modal -->
 {#if showCreateModal}
     <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-40"
+        style="background-color: rgba(0, 0, 0, 0.6);"
+    ></div>
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background-color: transparent;"
     >
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
+        <div class="card max-w-md w-full p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">
                 ตั้งงบประมาณใหม่
             </h3>
@@ -471,9 +476,14 @@
 <!-- Edit Modal -->
 {#if showEditModal && editingBudget}
     <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-40"
+        style="background-color: rgba(0, 0, 0, 0.6);"
+    ></div>
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background-color: transparent;"
     >
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
+        <div class="card max-w-md w-full p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">
                 แก้ไขงบประมาณ
             </h3>
@@ -555,9 +565,14 @@
 <!-- Delete Confirmation Modal -->
 {#if showDeleteModal && editingBudget}
     <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-40"
+        style="background-color: rgba(0, 0, 0, 0.6);"
+    ></div>
+    <div
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background-color: transparent;"
     >
-        <div class="bg-white rounded-xl max-w-md w-full p-6">
+        <div class="card max-w-md w-full p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-2">
                 ยืนยันการลบ
             </h3>
