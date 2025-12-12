@@ -16,19 +16,22 @@
     let showCustomDepartment = $state(false);
     let showCustomPaymentMethod = $state(false);
 
+    // Form submitting state
+    let isSubmitting = $state(false);
+
     function handleCategoryChange(e: Event) {
         const select = e.target as HTMLSelectElement;
-        showCustomCategory = select.value === 'custom';
+        showCustomCategory = select.value === "custom";
     }
 
     function handleDepartmentChange(e: Event) {
         const select = e.target as HTMLSelectElement;
-        showCustomDepartment = select.value === 'custom';
+        showCustomDepartment = select.value === "custom";
     }
 
     function handlePaymentMethodChange(e: Event) {
         const select = e.target as HTMLSelectElement;
-        showCustomPaymentMethod = select.value === 'custom';
+        showCustomPaymentMethod = select.value === "custom";
     }
 </script>
 
@@ -41,7 +44,9 @@
         >
             <ArrowLeft class="w-6 h-6" />
         </a>
-        <h1 class="text-2xl font-bold text-gray-900">สร้างรายการรายจ่ายประจำ</h1>
+        <h1 class="text-2xl font-bold text-gray-900">
+            สร้างรายการรายจ่ายประจำ
+        </h1>
     </div>
 
     <form
@@ -57,14 +62,19 @@
     >
         <!-- Card 1: ข้อมูลทั่วไป -->
         <div class="card p-6 space-y-6">
-            <div class="flex items-center gap-2 text-lg font-semibold text-gray-800 border-b pb-2">
+            <div
+                class="flex items-center gap-2 text-lg font-semibold text-gray-800 border-b pb-2"
+            >
                 <Repeat class="w-5 h-5 text-primary-600" />
                 ข้อมูลรายการ
             </div>
 
             <!-- Description -->
             <div>
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                    for="description"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                >
                     รายการ <span class="text-red-500">*</span>
                 </label>
                 <input
@@ -74,17 +84,22 @@
                     required
                     class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
                     placeholder="เช่น ค่าเช่าออฟฟิศ, ค่าอินเทอร์เน็ต"
-                    value={form?.values?.description ?? ''}
+                    value={form?.values?.description ?? ""}
                 />
             </div>
 
             <!-- Amount -->
             <div>
-                <label for="amount" class="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                    for="amount"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                >
                     จำนวนเงิน <span class="text-red-500">*</span>
                 </label>
                 <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div
+                        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                    >
                         <span class="text-gray-500">฿</span>
                     </div>
                     <input
@@ -95,14 +110,17 @@
                         required
                         class="w-full pl-8 rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 font-mono text-lg"
                         placeholder="0.00"
-                        value={form?.values?.amount ?? ''}
+                        value={form?.values?.amount ?? ""}
                     />
                 </div>
             </div>
 
             <!-- Vendor -->
             <div>
-                <label for="vendor" class="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                    for="vendor"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                >
                     ร้านค้า / ผู้รับเงิน
                 </label>
                 <input
@@ -111,7 +129,7 @@
                     name="vendor"
                     class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
                     placeholder="ระบุชื่อร้านค้า"
-                    value={form?.values?.vendor ?? ''}
+                    value={form?.values?.vendor ?? ""}
                 />
             </div>
         </div>
@@ -125,7 +143,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Category -->
                 <div>
-                    <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="category_id"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         หมวดหมู่ <span class="text-red-500">*</span>
                     </label>
                     {#if !showCustomCategory}
@@ -134,12 +155,14 @@
                             name="category_id"
                             required
                             class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                            value={form?.values?.category_id ?? ''}
+                            value={form?.values?.category_id ?? ""}
                             onchange={handleCategoryChange}
                         >
                             <option value="">-- เลือกหมวดหมู่ --</option>
                             {#each categories as cat}
-                                <option value={cat.id}>{cat.icon} {cat.name}</option>
+                                <option value={cat.id}
+                                    >{cat.icon} {cat.name}</option
+                                >
                             {/each}
                             <option value="custom">+ เพิ่มหมวดหมู่ใหม่</option>
                         </select>
@@ -155,7 +178,7 @@
                             <button
                                 type="button"
                                 class="btn-secondary px-3"
-                                onclick={() => showCustomCategory = false}
+                                onclick={() => (showCustomCategory = false)}
                             >
                                 ยกเลิก
                             </button>
@@ -165,7 +188,10 @@
 
                 <!-- Department -->
                 <div>
-                    <label for="department_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="department_id"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         แผนก <span class="text-red-500">*</span>
                     </label>
                     {#if !showCustomDepartment}
@@ -174,7 +200,7 @@
                             name="department_id"
                             required
                             class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                            value={form?.values?.department_id ?? ''}
+                            value={form?.values?.department_id ?? ""}
                             onchange={handleDepartmentChange}
                         >
                             <option value="">-- เลือกแผนก --</option>
@@ -195,7 +221,7 @@
                             <button
                                 type="button"
                                 class="btn-secondary px-3"
-                                onclick={() => showCustomDepartment = false}
+                                onclick={() => (showCustomDepartment = false)}
                             >
                                 ยกเลิก
                             </button>
@@ -205,7 +231,10 @@
 
                 <!-- Payment Method -->
                 <div class="md:col-span-2">
-                    <label for="payment_method_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="payment_method_id"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         วิธีการชำระเงิน <span class="text-red-500">*</span>
                     </label>
                     {#if !showCustomPaymentMethod}
@@ -214,14 +243,18 @@
                             name="payment_method_id"
                             required
                             class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                            value={form?.values?.payment_method_id ?? ''}
+                            value={form?.values?.payment_method_id ?? ""}
                             onchange={handlePaymentMethodChange}
                         >
                             <option value="">-- เลือกวิธีการชำระเงิน --</option>
                             {#each paymentMethods as pm}
-                                <option value={pm.id}>{pm.icon} {pm.name}</option>
+                                <option value={pm.id}
+                                    >{pm.icon} {pm.name}</option
+                                >
                             {/each}
-                            <option value="custom">+ เพิ่มวิธีการชำระเงินใหม่</option>
+                            <option value="custom"
+                                >+ เพิ่มวิธีการชำระเงินใหม่</option
+                            >
                         </select>
                     {:else}
                         <div class="flex gap-2">
@@ -235,7 +268,8 @@
                             <button
                                 type="button"
                                 class="btn-secondary px-3"
-                                onclick={() => showCustomPaymentMethod = false}
+                                onclick={() =>
+                                    (showCustomPaymentMethod = false)}
                             >
                                 ยกเลิก
                             </button>
@@ -254,7 +288,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Frequency -->
                 <div>
-                    <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                        for="frequency"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
                         ความถี่ <span class="text-red-500">*</span>
                     </label>
                     <select
@@ -262,7 +299,7 @@
                         name="frequency"
                         required
                         class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        value={form?.values?.frequency ?? 'monthly'}
+                        value={form?.values?.frequency ?? "monthly"}
                     >
                         <option value="weekly">รายสัปดาห์ (Weekly)</option>
                         <option value="monthly">รายเดือน (Monthly)</option>
@@ -272,8 +309,13 @@
 
                 <!-- Start Date -->
                 <div>
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        วันที่เริ่ม / ครบกำหนดครั้งถัดไป <span class="text-red-500">*</span>
+                    <label
+                        for="start_date"
+                        class="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                        วันที่เริ่ม / ครบกำหนดครั้งถัดไป <span
+                            class="text-red-500">*</span
+                        >
                     </label>
                     <input
                         type="date"
@@ -281,7 +323,8 @@
                         name="start_date"
                         required
                         class="w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500"
-                        value={form?.values?.start_date ?? toInputDate(new Date())}
+                        value={form?.values?.start_date ??
+                            toInputDate(new Date())}
                     />
                 </div>
             </div>
@@ -295,7 +338,8 @@
                 class="btn-primary w-full md:w-auto text-lg px-8 py-3 shadow-lg shadow-primary-600/20"
             >
                 {#if isSubmitting}
-                    <span class="loading loading-spinner loading-sm mr-2"></span>
+                    <span class="loading loading-spinner loading-sm mr-2"
+                    ></span>
                     กำลังบันทึก...
                 {:else}
                     <Save class="w-5 h-5 mr-2" />
