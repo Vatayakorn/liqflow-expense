@@ -53,37 +53,32 @@
       notifications.length > 0 && notifications.some((n: any) => !n.is_read);
   });
 
-  async function closeNotifications() {
+  function closeNotifications() {
     showNotifications = false;
-    if (hasUnread) {
-      hasUnread = false;
-      const unreadIds =
-        notifications.filter((n: any) => !n.is_read).map((n: any) => n.id) ||
-        [];
+  }
 
+  async function handleNotificationClick(notif: any) {
+    showNotifications = false;
+    if (!notif.is_read) {
       // Mark locally as read
-      notifications = notifications.map((n) => ({ ...n, is_read: true }));
+      notifications = notifications.map((n) =>
+        n.id === notif.id ? { ...n, is_read: true } : n,
+      );
 
-      if (unreadIds.length > 0) {
-        try {
-          await fetch("/api/notifications/mark-read", {
-            method: "POST",
-            body: JSON.stringify({ ids: unreadIds }),
-            headers: { "Content-Type": "application/json" },
-          });
-        } catch (error) {
-          console.error("Failed to mark notifications as read", error);
-        }
+      try {
+        await fetch("/api/notifications/mark-read", {
+          method: "POST",
+          body: JSON.stringify({ ids: [notif.id] }),
+          headers: { "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        console.error("Failed to mark notification as read", error);
       }
     }
   }
 
   function handleBellClick() {
-    if (showNotifications) {
-      closeNotifications();
-    } else {
-      showNotifications = true;
-    }
+    showNotifications = !showNotifications;
   }
 
   onMount(async () => {
@@ -381,7 +376,7 @@
                       onmouseleave={(e) =>
                         darkMode &&
                         (e.currentTarget.style.backgroundColor = "#000000")}
-                      onclick={closeNotifications}
+                      onclick={() => handleNotificationClick(notif)}
                     >
                       <div class="flex gap-3">
                         {#if !notif.is_read}
