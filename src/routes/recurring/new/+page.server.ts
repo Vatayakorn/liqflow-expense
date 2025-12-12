@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { supabase } from '$lib/supabase';
+import { createNotification } from '$lib/notification';
 
 export const actions: Actions = {
     default: async ({ request }) => {
@@ -40,7 +41,7 @@ export const actions: Actions = {
                 if (!error && data) payment_method_id = data.id;
             }
         }
-        
+
         // Calculate next_due_date (initially same as start_date)
         const next_due_date = start_date;
 
@@ -65,6 +66,15 @@ export const actions: Actions = {
                 values: Object.fromEntries(formData)
             });
         }
+
+        // Notification
+        await createNotification({
+            type: 'info',
+            title: 'สร้างรายจ่ายประจำใหม่',
+            message: `สร้างรายการรายจ่ายประจำ: ${description}`,
+            link: '/recurring',
+            targetRole: 'admin'
+        });
 
         throw redirect(303, '/recurring');
     }

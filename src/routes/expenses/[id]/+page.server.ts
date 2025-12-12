@@ -166,6 +166,23 @@ export const actions: Actions = {
             return fail(500, { error: 'เกิดข้อผิดพลาดในการลบ' });
         }
 
+        // Audit Log
+        await logAudit({
+            expenseId: params.id!,
+            action: 'update',
+            actorName: 'Manager Somchai',
+            actorRole: 'Admin',
+            comment: 'ลบรายการเบิก'
+        });
+
+        // Notification
+        await createNotification({
+            type: 'warning',
+            title: 'รายการถูกลบ',
+            message: 'มีการลบรายการเบิกโดย Manager Somchai',
+            targetRole: 'admin'
+        });
+
         throw redirect(303, '/expenses');
     }
 };

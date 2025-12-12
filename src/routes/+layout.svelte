@@ -16,6 +16,8 @@
     Sun,
   } from "lucide-svelte";
 
+  import { supabase } from "$lib/supabase";
+
   let { data, children } = $props();
 
   // State
@@ -25,17 +27,25 @@
   // สถานะเปิด/ปิด sidebar บน mobile
   let sidebarOpen = $state(false);
 
+  // Local notifications state for real-time updates
+  let notifications = $state(data.notifications ?? []);
+
   // Derived state: มี notification ที่ยังไม่อ่านหรือไม่
   // ใช้ local state เพื่อให้ update ทันทีโดยไม่ต้องรอ server fetch ใหม่
   let hasUnread = $state(false);
 
   $effect(() => {
-    // Sync initial state from data
-    if (data.notifications && data.notifications.length > 0) {
-      // ในที่นี้เรา assume ว่า data.notifications ที่ load มาคือที่ unread (ตาม query server)
-      // หรือถ้าอยากแม่นยำกว่านี้ต้องดู field is_read
-      hasUnread = true;
+    // Sync initial state from data when page loads/navigates
+    // Note: This might override real-time updates if data reloads, but that's acceptable for now
+    if (data.notifications) {
+      notifications = data.notifications;
     }
+  });
+
+  $effect(() => {
+    // Update hasUnread based on current notifications local state
+    hasUnread =
+      notifications.length > 0 && notifications.some((n: any) => !n.is_read);
   });
 
   async function handleBellClick() {
@@ -45,7 +55,10 @@
       // ถ้าเปิด dropdown และมี unread -> mark as read
       hasUnread = false; // Optimistic update: ลบจุดแดงทันที
 
-      const unreadIds = data.notifications?.map((n: any) => n.id) || [];
+      // Mark locally as read
+      notifications = notifications.map((n) => ({ ...n, is_read: true }));
+
+      const unreadIds = notifications.map((n: any) => n.id) || [];
       if (unreadIds.length > 0) {
         try {
           await fetch("/api/notifications/mark-read", {
@@ -79,14 +92,34 @@
       .then((res) => res.json())
       .then((data) => {
         if (data.processed > 0) {
-          // Refresh notifications if any were processed
-          // In a real app, we might invalidate('app:notifications')
           console.log("Processed recurring expenses:", data.processed);
         }
       })
       .catch((err) => console.error("Failed to check recurring expenses", err));
 
-    return () => window.removeEventListener("resize", checkMobile);
+    // Subscribe to Realtime Notifications
+    const channel = supabase
+      .channel("public:notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          console.log("New notification received:", payload);
+          const newNotif = payload.new;
+          // Add to front of list
+          notifications = [newNotif as any, ...notifications];
+          // Limit to 10 items to match server load (optional but good for UI)
+          if (notifications.length > 20) {
+            notifications = notifications.slice(0, 20);
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      supabase.removeChannel(channel);
+    };
   });
 
   function toggleDarkMode() {
@@ -258,15 +291,15 @@
               <span
                 class="text-xs text-gray-500"
                 style={darkMode ? "color: #aaaaaa;" : ""}
-                >{data.notifications?.length ?? 0} ใหม่</span
+                >{notifications.length ?? 0} ใหม่</span
               >
             </div>
             <div
               class="max-h-[60vh] overflow-y-auto"
               style={darkMode ? "background-color: #000000;" : ""}
             >
-              {#if data.notifications?.length > 0}
-                {#each data.notifications as notif}
+              {#if notifications.length > 0}
+                {#each notifications as notif}
                   <a
                     href={notif.link}
                     class="block p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors"

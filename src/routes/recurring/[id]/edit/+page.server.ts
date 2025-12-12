@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { supabase } from '$lib/supabase';
+import { createNotification } from '$lib/notification';
 
 export const load: PageServerLoad = async ({ params }) => {
     const { id } = params;
@@ -22,7 +23,7 @@ export const actions: Actions = {
     update: async ({ request, params }) => {
         const { id } = params;
         const formData = await request.formData();
-        
+
         const description = formData.get('description') as string;
         const amount = parseFloat(formData.get('amount') as string);
         const category_id = formData.get('category_id') as string;
@@ -61,6 +62,15 @@ export const actions: Actions = {
             });
         }
 
+        // Notification
+        await createNotification({
+            type: 'info',
+            title: 'แก้ไขรายจ่ายประจำ',
+            message: `แก้ไขรายการรายจ่ายประจำ: ${description}`,
+            link: '/recurring',
+            targetRole: 'admin'
+        });
+
         throw redirect(303, '/recurring');
     },
 
@@ -75,6 +85,15 @@ export const actions: Actions = {
         if (deleteError) {
             return fail(500, { error: deleteError.message });
         }
+
+        // Notification
+        await createNotification({
+            type: 'warning',
+            title: 'ลบรายจ่ายประจำ',
+            message: 'มีการลบรายการรายจ่ายประจำ',
+            link: '/recurring',
+            targetRole: 'admin'
+        });
 
         throw redirect(303, '/recurring');
     }

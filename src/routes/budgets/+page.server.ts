@@ -3,6 +3,8 @@ import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 import { supabase } from '$lib/supabase';
 import type { BudgetWithUsage, BudgetWithRelations } from '$lib/types';
+import { createNotification } from '$lib/notification';
+import { formatCurrency } from '$lib/utils';
 
 export const load: PageServerLoad = async ({ url }) => {
     const now = new Date();
@@ -133,6 +135,15 @@ export const actions: Actions = {
             return fail(500, { error: 'เกิดข้อผิดพลาดในการสร้างงบประมาณ' });
         }
 
+        // Notification
+        await createNotification({
+            type: 'info',
+            title: 'สร้างงบประมาณใหม่',
+            message: `สร้างงบประมาณ ${formatCurrency(amount)} สำหรับ ${month}`,
+            link: `/budgets?month=${month}`,
+            targetRole: 'admin'
+        });
+
         return { success: true };
     },
 
@@ -164,6 +175,15 @@ export const actions: Actions = {
             return fail(500, { error: 'เกิดข้อผิดพลาดในการแก้ไขงบประมาณ' });
         }
 
+        // Notification
+        await createNotification({
+            type: 'info',
+            title: 'แก้ไขงบประมาณ',
+            message: `แก้ไขงบประมาณเป็น ${formatCurrency(amount)}`,
+            link: '/budgets',
+            targetRole: 'admin'
+        });
+
         return { success: true };
     },
 
@@ -184,6 +204,15 @@ export const actions: Actions = {
             console.error('Budget delete error:', error);
             return fail(500, { error: 'เกิดข้อผิดพลาดในการลบ' });
         }
+
+        // Notification
+        await createNotification({
+            type: 'warning',
+            title: 'ลบงบประมาณ',
+            message: 'มีการลบงบประมาณ',
+            link: '/budgets',
+            targetRole: 'admin'
+        });
 
         return { success: true };
     }

@@ -4,6 +4,8 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { supabase, uploadFile, deleteFile } from '$lib/supabase';
 import type { AttachmentType } from '$lib/types';
 import { logAudit } from '$lib/audit';
+import { createNotification } from '$lib/notification';
+import { formatCurrency } from '$lib/utils';
 
 export const load: PageServerLoad = async ({ params }) => {
     // โหลด expense พร้อม relations
@@ -250,6 +252,15 @@ export const actions: Actions = {
             actorName: createdByName, // หรือใช้ชื่อคนแก้ไขจริง
             actorRole: 'Editor',
             comment: 'แก้ไขรายละเอียดรายการ'
+        });
+
+        // สร้างการแจ้งเตือน
+        await createNotification({
+            type: 'info',
+            title: 'รายการถูกแก้ไข',
+            message: `${createdByName} แก้ไขรายการเบิก ${formatCurrency(amount)}`,
+            link: `/expenses/${params.id}`,
+            targetRole: 'admin'
         });
 
         // Redirect ไปหน้ารายละเอียด
