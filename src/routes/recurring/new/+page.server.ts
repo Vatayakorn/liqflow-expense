@@ -45,6 +45,11 @@ export const actions: Actions = {
         // Calculate next_due_date (initially same as start_date)
         const next_due_date = start_date;
 
+        // Get current user from session
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        const createdByName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Unknown User';
+
         const { error } = await supabase.from('recurring_expenses').insert({
             description,
             amount,
@@ -55,7 +60,7 @@ export const actions: Actions = {
             frequency,
             start_date,
             next_due_date,
-            created_by_name: 'Manager Somchai', // Hardcoded for now as per layout
+            created_by_name: createdByName,
             active: true
         });
 

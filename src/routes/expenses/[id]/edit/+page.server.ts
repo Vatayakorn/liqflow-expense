@@ -32,6 +32,19 @@ export const actions: Actions = {
     default: async ({ request, params }) => {
         const formData = await request.formData();
 
+        // Prepare safe values for return (exclude files)
+        const values: Record<string, string> = {};
+        for (const [key, value] of formData.entries()) {
+            if (typeof value === 'string') {
+                values[key] = value;
+            }
+        }
+
+        // Get current user from session for Audit Log
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        const currentUserName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || (formData.get('current_user_name') as string) || 'Unknown User';
+
         // ดึงข้อมูลจากฟอร์ม
         const date = formData.get('date') as string;
         const amountStr = formData.get('amount') as string;
@@ -73,7 +86,7 @@ export const actions: Actions = {
         }
 
         if (Object.keys(errors).length > 0) {
-            return fail(400, { errors, values: Object.fromEntries(formData) });
+            return fail(400, { errors, values });
         }
 
         // ถ้ามี custom category ให้สร้างใหม่
@@ -97,7 +110,7 @@ export const actions: Actions = {
                 } else {
                     return fail(500, {
                         error: 'เกิดข้อผิดพลาดในการสร้างหมวดหมู่ใหม่',
-                        values: Object.fromEntries(formData)
+                        values
                     });
                 }
             } else if (newCategory) {
@@ -126,7 +139,7 @@ export const actions: Actions = {
                 } else {
                     return fail(500, {
                         error: 'เกิดข้อผิดพลาดในการสร้างวิธีชำระเงินใหม่',
-                        values: Object.fromEntries(formData)
+                        values
                     });
                 }
             } else if (newPayment) {
@@ -155,7 +168,7 @@ export const actions: Actions = {
             console.error('Update error:', updateError);
             return fail(500, {
                 error: 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่',
-                values: Object.fromEntries(formData)
+                values
             });
         }
 
@@ -249,7 +262,7 @@ export const actions: Actions = {
         await logAudit({
             expenseId: params.id!,
             action: 'update',
-            actorName: createdByName, // หรือใช้ชื่อคนแก้ไขจริง
+            actorName: currentUserName, // ใช้ชื่อคนแก้ไขจริงจาก Session
             actorRole: 'Editor',
             comment: 'แก้ไขรายละเอียดรายการ'
         });
@@ -258,7 +271,7 @@ export const actions: Actions = {
         await createNotification({
             type: 'info',
             title: 'รายการถูกแก้ไข',
-            message: `${createdByName} แก้ไขรายการเบิก ${formatCurrency(amount)}`,
+            message: `${currentUserName} แก้ไขรายการเบิก ${formatCurrency(amount)}`,
             link: `/expenses/${params.id}`,
             targetRole: 'admin'
         });

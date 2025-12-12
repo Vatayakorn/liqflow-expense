@@ -5,6 +5,9 @@ import { supabase } from '$lib/supabase';
 export const load: LayoutServerLoad = async ({ depends }) => {
     depends('app:notifications');
 
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession();
+
     // โหลด lookup tables ทั้งหมดพร้อมกัน
     const [categoriesResult, departmentsResult, paymentMethodsResult, notificationsResult] = await Promise.all([
         supabase.from('categories').select('*').order('name'),
@@ -14,6 +17,7 @@ export const load: LayoutServerLoad = async ({ depends }) => {
     ]);
 
     return {
+        session,
         categories: categoriesResult.data ?? [],
         departments: departmentsResult.data ?? [],
         paymentMethods: paymentMethodsResult.data ?? [],

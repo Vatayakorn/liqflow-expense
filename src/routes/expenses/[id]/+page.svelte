@@ -32,9 +32,25 @@
     } from "$lib/utils";
     import type { AttachmentType, ExpenseWithRelations } from "$lib/types";
     import type { PageData, ActionData } from "./$types";
+    import { onMount } from "svelte";
+    import { supabase } from "$lib/supabase";
 
     let { data, form }: { data: PageData; form: ActionData } = $props();
     const expense = data.expense as ExpenseWithRelations;
+
+    // Current User Name for Audit Log
+    let currentUserName = $state("");
+
+    onMount(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            currentUserName = 
+                session.user.user_metadata?.full_name ||
+                session.user.user_metadata?.name ||
+                session.user.email?.split("@")[0] ||
+                "User";
+        }
+    });
 
     // จัดกลุ่ม attachments ตาม type
     const attachmentsByType = $derived(() => {
@@ -169,6 +185,13 @@
                                 name="status"
                                 value={action.value}
                             />
+                            {#if currentUserName}
+                                <input
+                                    type="hidden"
+                                    name="actor_name"
+                                    value={currentUserName}
+                                />
+                            {/if}
                             <button
                                 type="submit"
                                 class="btn-secondary {action.color}"

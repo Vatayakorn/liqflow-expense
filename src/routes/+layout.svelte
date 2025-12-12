@@ -111,6 +111,7 @@
     const {
       data: { session: initialSession },
     } = await supabase.auth.getSession();
+    console.log("Current Session:", initialSession); // Debug session data
     await validateSession(initialSession);
 
     const {
@@ -514,22 +515,16 @@
             {/if}
           </h2>
           <div class="flex items-center gap-4">
-            <!-- User Profile Placeholder -->
+            <!-- User Profile -->
             <div class="flex items-center gap-2">
               <span
                 class="text-sm font-medium text-gray-700"
-                style={darkMode ? "color: #ffffff;" : ""}>Manager Somchai</span
+                style={darkMode ? "color: #ffffff;" : ""}
+                >{session?.user?.user_metadata?.full_name ||
+                  session?.user?.user_metadata?.name ||
+                  session?.user?.email?.split("@")[0] ||
+                  "User"}</span
               >
-              <div
-                class="w-8 h-8 bg-gray-200 rounded-full overflow-hidden"
-                style={darkMode ? "background-color: #1a1a1a;" : ""}
-              >
-                <img
-                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Somchai"
-                  alt="Profile"
-                  class="w-full h-full object-cover"
-                />
-              </div>
             </div>
             <!-- Notifications -->
             {@render notificationArea()}

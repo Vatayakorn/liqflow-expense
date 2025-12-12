@@ -48,10 +48,15 @@ function getAuditAction(status: ExpenseStatus): 'approve' | 'reject' | 'pay' | '
 
 export const actions: Actions = {
     // เปลี่ยนสถานะ
-    updateStatus: async ({ request, params }) => {
+    updateStatus: async ({ request, params, locals }) => {
         const formData = await request.formData();
         const status = formData.get('status') as string;
         const comment = formData.get('comment') as string;
+
+        // Get current user from session
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        const actorName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || (formData.get('actor_name') as string) || 'Unknown User';
 
         // Validation
         if (!status) {
@@ -66,7 +71,6 @@ export const actions: Actions = {
             .single();
 
         const oldStatus = currentExpense?.status;
-        const actorName = 'Manager Somchai'; // TODO: Mock user
         let auditComment = comment || ''; // Initialize audit comment variable
 
         // Update status
@@ -143,6 +147,11 @@ export const actions: Actions = {
 
     // ลบรายการ
     delete: async ({ params }) => {
+        // Get current user from session
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        const actorName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Unknown User';
+
         // ดึงไฟล์แนบเพื่อลบ
         const { data: attachments } = await supabase
             .from('attachments')
@@ -170,7 +179,7 @@ export const actions: Actions = {
         await logAudit({
             expenseId: params.id!,
             action: 'update',
-            actorName: 'Manager Somchai',
+            actorName,
             actorRole: 'Admin',
             comment: 'ลบรายการเบิก'
         });
@@ -179,7 +188,7 @@ export const actions: Actions = {
         await createNotification({
             type: 'warning',
             title: 'รายการถูกลบ',
-            message: 'มีการลบรายการเบิกโดย Manager Somchai',
+            message: `มีการลบรายการเบิกโดย ${actorName}`,
             targetRole: 'admin'
         });
 

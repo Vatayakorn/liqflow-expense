@@ -12,12 +12,36 @@
     import { toInputDate, ATTACHMENT_TYPES } from "$lib/utils";
     import type { AttachmentType } from "$lib/types";
 
+    import { onMount } from "svelte";
+    import { supabase } from "$lib/supabase";
+
     let { form } = $props();
 
     // Lookup data จาก layout
     const categories = $page.data.categories ?? [];
     const departments = $page.data.departments ?? [];
     const paymentMethods = $page.data.paymentMethods ?? [];
+
+    // Get user from session (Client-side fallback)
+    let currentUserName = $state(
+        $page.data.session?.user?.user_metadata?.full_name ||
+        $page.data.session?.user?.user_metadata?.name ||
+        $page.data.session?.user?.email?.split("@")[0] ||
+        ""
+    );
+
+    onMount(async () => {
+        if (!currentUserName) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                currentUserName = 
+                    session.user.user_metadata?.full_name ||
+                    session.user.user_metadata?.name ||
+                    session.user.email?.split("@")[0] ||
+                    "User";
+            }
+        }
+    });
 
     // Form state
     let isSubmitting = $state(false);
@@ -438,27 +462,22 @@
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- ชื่อผู้ทำรายการ -->
+                <!-- ชื่อผู้ทำรายการ (Auto-filled from session) -->
                 <div>
                     <label for="created_by_name" class="label">
-                        ชื่อผู้ทำรายการ <span class="text-red-500">*</span>
+                        ชื่อผู้ทำรายการ
                     </label>
                     <input
                         type="text"
                         id="created_by_name"
                         name="created_by_name"
-                        value={form?.values?.created_by_name ?? ""}
-                        placeholder="ชื่อ-นามสกุล"
-                        class="input {form?.errors?.created_by_name
-                            ? 'border-red-500'
-                            : ''}"
-                        required
+                        value={currentUserName}
+                        class="input bg-gray-50"
+                        readonly
                     />
-                    {#if form?.errors?.created_by_name}
-                        <p class="text-red-500 text-xs mt-1">
-                            {form.errors.created_by_name}
-                        </p>
-                    {/if}
+                    <p class="text-xs text-gray-400 mt-1">
+                        ใช้ชื่อจาก Google Account อัตโนมัติ
+                    </p>
                 </div>
 
                 <!-- แผนก -->

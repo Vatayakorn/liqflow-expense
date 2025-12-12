@@ -16,6 +16,14 @@ export const actions: Actions = {
     default: async ({ request }) => {
         const formData = await request.formData();
 
+        // Prepare safe values for return (exclude files)
+        const values: Record<string, string> = {};
+        for (const [key, value] of formData.entries()) {
+            if (typeof value === 'string') {
+                values[key] = value;
+            }
+        }
+
         // ดึงข้อมูลจากฟอร์ม
         const date = formData.get('date') as string;
         const amountStr = formData.get('amount') as string;
@@ -26,9 +34,13 @@ export const actions: Actions = {
         const vendor = formData.get('vendor') as string || null;
         const description = formData.get('description') as string;
         const noteInternal = formData.get('note_internal') as string || null;
-        const createdByName = formData.get('created_by_name') as string;
         const departmentId = formData.get('department_id') as string;
         const status = (formData.get('status') as string) || 'draft';
+
+        // Get current user from session
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        const createdByName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || (formData.get('created_by_name') as string) || 'Unknown User';
 
         // Validation
         const errors: Record<string, string> = {};
@@ -57,7 +69,7 @@ export const actions: Actions = {
         }
 
         if (Object.keys(errors).length > 0) {
-            return fail(400, { errors, values: Object.fromEntries(formData) });
+            return fail(400, { errors, values });
         }
 
         // ถ้ามี custom category ให้สร้างใหม่
@@ -81,7 +93,7 @@ export const actions: Actions = {
                 } else {
                     return fail(500, {
                         error: 'เกิดข้อผิดพลาดในการสร้างหมวดหมู่ใหม่',
-                        values: Object.fromEntries(formData)
+                        values
                     });
                 }
             } else if (newCategory) {
@@ -110,7 +122,7 @@ export const actions: Actions = {
                 } else {
                     return fail(500, {
                         error: 'เกิดข้อผิดพลาดในการสร้างวิธีชำระเงินใหม่',
-                        values: Object.fromEntries(formData)
+                        values
                     });
                 }
             } else if (newPayment) {
@@ -140,7 +152,7 @@ export const actions: Actions = {
             console.error('Insert error:', insertError);
             return fail(500, {
                 error: 'เกิดข้อผิดพลาดในการบันทึก กรุณาลองใหม่',
-                values: Object.fromEntries(formData)
+                values
             });
         }
 
