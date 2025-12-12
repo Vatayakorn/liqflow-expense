@@ -13,7 +13,7 @@ export const load: LayoutServerLoad = async ({ depends }) => {
         supabase.from('categories').select('*').order('name'),
         supabase.from('departments').select('*').order('name'),
         supabase.from('payment_methods').select('*').order('name'),
-        supabase.from('notifications').select('*').eq('is_read', false).order('created_at', { ascending: false }).limit(10)
+        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(10)
     ]);
 
     return {
