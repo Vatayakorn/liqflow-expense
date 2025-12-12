@@ -53,17 +53,17 @@
       notifications.length > 0 && notifications.some((n: any) => !n.is_read);
   });
 
-  async function handleBellClick() {
-    showNotifications = !showNotifications;
-
-    if (showNotifications && hasUnread) {
-      // ถ้าเปิด dropdown และมี unread -> mark as read
-      hasUnread = false; // Optimistic update: ลบจุดแดงทันที
+  async function closeNotifications() {
+    showNotifications = false;
+    if (hasUnread) {
+      hasUnread = false;
+      const unreadIds =
+        notifications.filter((n: any) => !n.is_read).map((n: any) => n.id) ||
+        [];
 
       // Mark locally as read
       notifications = notifications.map((n) => ({ ...n, is_read: true }));
 
-      const unreadIds = notifications.map((n: any) => n.id) || [];
       if (unreadIds.length > 0) {
         try {
           await fetch("/api/notifications/mark-read", {
@@ -75,6 +75,14 @@
           console.error("Failed to mark notifications as read", error);
         }
       }
+    }
+  }
+
+  function handleBellClick() {
+    if (showNotifications) {
+      closeNotifications();
+    } else {
+      showNotifications = true;
     }
   }
 
@@ -373,25 +381,27 @@
                       onmouseleave={(e) =>
                         darkMode &&
                         (e.currentTarget.style.backgroundColor = "#000000")}
-                      onclick={() => (showNotifications = false)}
+                      onclick={closeNotifications}
                     >
                       <div class="flex gap-3">
-                        {#if notif.type === "success"}
-                          <div
-                            class="w-2 h-2 mt-2 rounded-full bg-green-500 shrink-0"
-                          ></div>
-                        {:else if notif.type === "error"}
-                          <div
-                            class="w-2 h-2 mt-2 rounded-full bg-red-500 shrink-0"
-                          ></div>
-                        {:else if notif.type === "warning"}
-                          <div
-                            class="w-2 h-2 mt-2 rounded-full bg-orange-500 shrink-0"
-                          ></div>
-                        {:else}
-                          <div
-                            class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"
-                          ></div>
+                        {#if !notif.is_read}
+                          {#if notif.type === "success"}
+                            <div
+                              class="w-2 h-2 mt-2 rounded-full bg-green-500 shrink-0"
+                            ></div>
+                          {:else if notif.type === "error"}
+                            <div
+                              class="w-2 h-2 mt-2 rounded-full bg-red-500 shrink-0"
+                            ></div>
+                          {:else if notif.type === "warning"}
+                            <div
+                              class="w-2 h-2 mt-2 rounded-full bg-orange-500 shrink-0"
+                            ></div>
+                          {:else}
+                            <div
+                              class="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"
+                            ></div>
+                          {/if}
                         {/if}
                         <div>
                           <p
@@ -434,7 +444,7 @@
             <div
               class="fixed inset-0 z-40"
               style="background-color: transparent !important;"
-              onclick={() => (showNotifications = false)}
+              onclick={closeNotifications}
             ></div>
           {/if}
         </div>
