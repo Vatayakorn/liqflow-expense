@@ -14,7 +14,8 @@ export const load: PageServerLoad = async ({ params }) => {
             *,
             category: categories(*),
             department: departments(*),
-            payment_method: payment_methods(*)
+            payment_method: payment_methods(*),
+            attachments(*)
         `)
         .eq('id', params.id)
         .single();
