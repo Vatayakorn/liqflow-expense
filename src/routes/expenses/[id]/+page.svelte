@@ -15,6 +15,7 @@
         Image as ImageIcon,
         ExternalLink,
         Clock,
+        Download,
     } from "lucide-svelte";
     import { enhance } from "$app/forms";
     import {
@@ -35,6 +36,27 @@
     import { onMount } from "svelte";
     import { supabase } from "$lib/supabase";
 
+    // ฟังก์ชัน Download ไฟล์
+    async function handleDownload(url: string, fileName: string) {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            console.error("Download failed:", error);
+            // Fallback: เปิด URL ในแท็บใหม่
+            window.open(url, "_blank");
+        }
+    }
+
     let { data, form }: { data: PageData; form: ActionData } = $props();
     const expense = data.expense as ExpenseWithRelations;
 
@@ -42,9 +64,11 @@
     let currentUserName = $state("");
 
     onMount(async () => {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
         if (session?.user) {
-            currentUserName = 
+            currentUserName =
                 session.user.user_metadata?.full_name ||
                 session.user.user_metadata?.name ||
                 session.user.email?.split("@")[0] ||
@@ -332,26 +356,48 @@
                                                       1200,
                                                   )
                                                 : getPublicUrl(file.file_path)}
-                                            <button
-                                                class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-primary-500 transition-all hover:shadow-lg active:scale-95"
-                                                onclick={() =>
-                                                    (selectedImage =
-                                                        previewUrl)}
-                                            >
-                                                <img
-                                                    src={thumbnailUrl}
-                                                    alt={file.file_name}
-                                                    class="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
-                                                <div
-                                                    class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                            {@const originalUrl = getPublicUrl(
+                                                file.file_path,
+                                            )}
+                                            <div class="relative group">
+                                                <!-- Preview Button -->
+                                                <button
+                                                    class="relative aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-primary-500 transition-all hover:shadow-lg active:scale-95 w-full"
+                                                    onclick={() =>
+                                                        (selectedImage =
+                                                            previewUrl)}
                                                 >
-                                                    <ExternalLink
-                                                        class="w-6 h-6 text-white"
+                                                    <img
+                                                        src={thumbnailUrl}
+                                                        alt={file.file_name}
+                                                        class="w-full h-full object-cover"
+                                                        loading="lazy"
                                                     />
-                                                </div>
-                                            </button>
+                                                    <div
+                                                        class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                    >
+                                                        <ExternalLink
+                                                            class="w-6 h-6 text-white"
+                                                        />
+                                                    </div>
+                                                </button>
+                                                <!-- Download Button -->
+                                                <button
+                                                    class="absolute bottom-1 right-1 p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-md border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onclick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDownload(
+                                                            originalUrl,
+                                                            file.file_name,
+                                                        );
+                                                    }}
+                                                    title="ดาวน์โหลด {file.file_name}"
+                                                >
+                                                    <Download
+                                                        class="w-4 h-4 text-gray-700"
+                                                    />
+                                                </button>
+                                            </div>
                                         {/each}
                                     </div>
                                 </div>
@@ -535,12 +581,27 @@
         role="button"
         tabindex="-1"
     >
-        <button
-            class="absolute top-4 right-4 text-white hover:text-gray-300"
-            onclick={() => (selectedImage = null)}
-        >
-            <XIcon class="w-8 h-8" />
-        </button>
+        <!-- Top Right Buttons -->
+        <div class="absolute top-4 right-4 flex items-center gap-2">
+            <!-- Download Button -->
+            <button
+                class="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    handleDownload(selectedImage, "attachment");
+                }}
+                title="ดาวน์โหลดไฟล์"
+            >
+                <Download class="w-6 h-6 text-white" />
+            </button>
+            <!-- Close Button -->
+            <button
+                class="p-2 text-white hover:text-gray-300"
+                onclick={() => (selectedImage = null)}
+            >
+                <XIcon class="w-8 h-8" />
+            </button>
+        </div>
         <img
             src={selectedImage}
             alt="Preview"
